@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">SmartHome</string>
+    <string name="status_message">Waiting for connection...</string>
+    <string name="action_settings">Settings</string>
+    <string name="ringtone_active">You got me!</string>
+    <string name="ringtone_confirm">Confirm</string>
+    <string name="ringtone_cancel">Cancel</string>
+</resources>
