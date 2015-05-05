@@ -12,6 +12,8 @@ import android.widget.TextView;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -21,21 +23,20 @@ import java.net.URISyntaxException;
  */
 public class MainActivity extends ActionBarActivity {
 
-    private String host = "192.168.43.196";
-    private String port = "8000";
+    private String host = "10.2.96.166";
+    private String port = "9002";
     private WebSocketClient mWebSocketClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         connectWebSocket();
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        //TODO: run the app as service in the background
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
@@ -72,16 +73,29 @@ public class MainActivity extends ActionBarActivity {
 
             @Override
             public void onMessage(String s) {
+                //TODO: add notification
                 Log.i("WebSocket", "message receiving: " + s);
                 final String message = s;
-                if (s.equals("127.0.0.1 - where is my phone")) {
-                    Log.i("WebSocket", "action!!");
-                    playRingTon();
+
+                try {
+                    JSONObject msg = new JSONObject(message);
+                    String command = msg.getString("post_content");
+                    switch (command) {
+                        case "where is my phone":
+                            Log.i("WebSocket", "searching for phone, trigger ringtone");
+                            playRingTone();
+                            break;
+                        default:
+                            break;
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        TextView textView = (TextView)findViewById(R.id.messages);
+                        TextView textView = (TextView) findViewById(R.id.messages);
                         textView.setText(textView.getText() + "\n" + message);
                     }
                 });
@@ -109,7 +123,7 @@ public class MainActivity extends ActionBarActivity {
     /*
         Trigger ringtone when received Message equals to the right command
      */
-    public void playRingTon() {
+    public void playRingTone() {
         RingtoneDialogFragment alert = new RingtoneDialogFragment();
         alert.show(getFragmentManager(), "FoundAlert");
     }
