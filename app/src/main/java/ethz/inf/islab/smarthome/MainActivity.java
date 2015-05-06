@@ -1,6 +1,8 @@
 package ethz.inf.islab.smarthome;
 
+import android.app.NotificationManager;
 import android.os.Build;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,8 +14,8 @@ import android.widget.TextView;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -23,7 +25,7 @@ import java.net.URISyntaxException;
  */
 public class MainActivity extends ActionBarActivity {
 
-    private String host = "10.2.96.166";
+    private String host = "10.2.223.140";
     private String port = "9002";
     private WebSocketClient mWebSocketClient;
 
@@ -52,7 +54,7 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void connectWebSocket() {
+    public void connectWebSocket() {
         Log.i("WebSocket", "Trying to connect");
         URI uri;
         try {
@@ -73,20 +75,22 @@ public class MainActivity extends ActionBarActivity {
 
             @Override
             public void onMessage(String s) {
-                //TODO: add notification
                 Log.i("WebSocket", "message receiving: " + s);
                 final String message = s;
 
                 try {
-                    JSONObject msg = new JSONObject(message);
-                    String command = msg.getString("post_content");
-                    switch (command) {
-                        case "where is my phone":
-                            Log.i("WebSocket", "searching for phone, trigger ringtone");
-                            playRingTone();
-                            break;
-                        default:
-                            break;
+                    JSONArray messages = new JSONArray(message);
+                    for (int i = 0 ; i < messages.length(); i++) {
+                        String command = messages.getJSONObject(i).getString("post_content");
+                        Log.i("WebSocket", command);
+                        switch (command) {
+                            case "where is my phone":
+                                Log.i("WebSocket", "searching for phone, trigger ringtone");
+                                playRingTone();
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -126,5 +130,20 @@ public class MainActivity extends ActionBarActivity {
     public void playRingTone() {
         RingtoneDialogFragment alert = new RingtoneDialogFragment();
         alert.show(getFragmentManager(), "FoundAlert");
+        notifyMessage();
+    }
+
+    public void notifyMessage() {
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setContentTitle("SmartHome")
+                        .setContentText("Someone is looking for your phone!");
+        int mNotificationId = 001;
+        // Gets an instance of the NotificationManager service
+        NotificationManager mNotifyMgr =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        // Builds the notification and issues it.
+        mNotifyMgr.notify(mNotificationId, mBuilder.build());
     }
 }
